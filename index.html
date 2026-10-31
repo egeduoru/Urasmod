@@ -2,8 +2,8 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sandbox Lab 6 — Удобное управление</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<title>Sandbox Lab 7 — Автоматически ПК или телефон</title>
 <style>
 :root{--accent:#8cf3db;--coral:#ffb48d;--bg:#0b121b;--glass:rgba(12,22,33,.74);--line:rgba(208,244,255,.17);--text:#e8f6f8;--muted:#9bb5c0}
 *{box-sizing:border-box}body{margin:0;overflow:hidden;background:#91adbd;color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;user-select:none}button{font:inherit;cursor:pointer}#game{position:fixed;inset:0;width:100%;height:100%;display:block;outline:0;background:linear-gradient(#8aabc4 0%,#c5dbe0 52%,#dce2db 100%)}
@@ -52,16 +52,89 @@ body.matchLit #matchGlow{opacity:1}
 #slot-grab.active{min-width:132px}
 @media(max-height:690px){#overlay .modalTop{padding-top:14px;padding-bottom:12px}#overlay .modalTop h1{font-size:27px;margin:5px 0}#overlay .modalBottom{padding-top:10px;padding-bottom:12px}#overlay .modalBody{padding-top:12px;padding-bottom:12px}}
 
+
+/* Sandbox Lab 7 — автоматический адаптивный интерфейс. */
+.deviceChoices{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.deviceChoice{background:#1f3541;border:1px solid #67828c7a;border-radius:10px;color:#cce2e5;font-size:12px;font-weight:750;padding:10px 14px;min-height:42px}
+.deviceChoice.selected{border-color:#8cf3db;color:#baffed;background:#255055}
+.deviceNote{font-size:11px;color:#a2c4c8;margin:0 0 15px;line-height:1.35}
+#mobileUI{display:none;position:fixed;inset:0;z-index:12;pointer-events:none;touch-action:none;-webkit-user-select:none;user-select:none}
+body.mobile-mode{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none}
+body.mobile-mode #game{touch-action:none}
+body.mobile-mode.playing #mobileUI{display:block}
+#mobileUI button,#touchJoystick{touch-action:none;pointer-events:auto;-webkit-tap-highlight-color:transparent;user-select:none}
+#mobileUI button{color:#f1fffd;font-family:inherit;border:1.5px solid #b6e5eb75;background:rgba(9,27,39,.75);box-shadow:0 3px 18px #061b2677}
+#touchMenu{position:absolute;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));height:39px;z-index:2}
+.touchChip{height:43px;min-width:48px;border-radius:11px;padding:4px 10px;display:flex;justify-content:center;align-items:center;gap:5px;font-size:18px;font-weight:800}
+.touchChip span{font-size:10px;max-width:94px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#touchSlots{position:absolute;top:max(55px,calc(env(safe-area-inset-top) + 43px));right:max(12px,env(safe-area-inset-right));display:flex;align-items:center;gap:5px;z-index:1}
+#mobileUI .active{color:#a2ffe5;border-color:#80ffe6;background:#20525aee}
+#touchShapeBar{position:absolute;top:max(107px,calc(env(safe-area-inset-top) + 95px));right:max(12px,env(safe-area-inset-right));display:flex;gap:3px;align-items:center;max-width:230px;background:#102b39d9;border:1px solid #b0e8e86d;border-radius:9px;padding:4px 5px;font-size:10px;font-weight:800;color:#fff}
+#touchShapeBar button{height:29px;min-width:30px;border-radius:6px;font-size:12px}
+#touchShapeName{max-width:142px;min-width:70px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;text-align:center}
+#touchJoystick{position:absolute;left:max(16px,env(safe-area-inset-left));bottom:max(18px,calc(env(safe-area-inset-bottom) + 13px));height:116px;width:116px;border-radius:50%;border:2px solid #aaf2e58a;background:radial-gradient(circle,#7ce0da22,#0d283c9c);box-shadow:inset 0 0 16px #051c259c,0 6px 16px #0311197a}
+#touchJoystick::after{content:'ДВИЖЕНИЕ';position:absolute;left:50%;top:-19px;transform:translateX(-50%);font-size:10px;letter-spacing:.08em;color:#e8fef7;text-shadow:0 2px 6px #031924;font-weight:800;pointer-events:none}
+#touchStick{width:54px;height:54px;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:radial-gradient(circle at 40% 35%,#88dfef,#295d75);border:2px solid #d6ffff90;border-radius:50%;box-shadow:0 2px 12px #0008;pointer-events:none}
+#touchRight{position:absolute;right:max(13px,env(safe-area-inset-right));bottom:max(17px,env(safe-area-inset-bottom));width:218px;height:167px}
+.touchAction{position:absolute;border-radius:50%;width:70px;height:70px;display:flex;align-items:center;flex-direction:column;justify-content:center;line-height:1;font-size:25px;font-weight:900}
+.touchAction small{display:block;font-size:9px;letter-spacing:.04em;margin-top:4px}
+#touchPrimary{right:0;bottom:0;width:80px;height:80px;background:linear-gradient(145deg,#257b78e8,#164358ed)!important;border-color:#8fffe0!important}
+#touchSecondary{right:87px;bottom:13px}
+#touchJump{right:3px;top:0;width:62px;height:62px}
+#mobileUI button.pressed{background:#317a81e8!important;transform:scale(.96)}
+#touchLookTip{position:absolute;left:50%;bottom:13px;transform:translateX(-50%);white-space:nowrap;font-size:10px;color:#f2fffc88;text-shadow:0 2px 5px #011923;pointer-events:none}
+body.mobile-mode #toolbar,body.mobile-mode #hint,body.mobile-mode #zone{display:none}
+body.mobile-mode #brand{left:max(12px,env(safe-area-inset-left));top:max(12px,env(safe-area-inset-top));transform:scale(.78);transform-origin:top left}
+body.mobile-mode #stats{top:max(58px,calc(env(safe-area-inset-top) + 45px));left:max(12px,env(safe-area-inset-left));right:auto;font-size:10px;padding:7px 9px;gap:8px}
+body.mobile-mode #toast{top:calc(50% - 70px);max-width:80vw;text-align:center;font-size:11px}
+body.mobile-mode #gun{width:min(45vw,240px);right:6vw;bottom:-12vh}
+body.mobile-mode .viewHand{width:min(43vw,230px);right:7vw;bottom:-12vh}
+body.mobile-mode #chargeHUD{top:calc(50% + 40px);width:min(235px,70vw)}
+body.mobile-mode #toolState{top:calc(50% + 38px);font-size:10px;max-width:74vw;min-width:0;white-space:normal}
+body.mobile-mode #targetInfo{font-size:9px;max-width:70vw;text-align:center;white-space:normal}
+body.mobile-mode #overlay .modal{max-height:calc(100dvh - 18px)}
+body.mobile-mode #overlay{padding:9px}
+body.mobile-mode #mobileMenuTip{display:block!important}body.mobile-mode #overlay .modalTop{padding:13px 17px 10px}
+body.mobile-mode #overlay .modalTop h1{font-size:clamp(21px,3.7vw,30px);margin:4px 0}
+body.mobile-mode #overlay .modalTop p{font-size:11px;line-height:1.35}
+body.mobile-mode #overlay .modalBody{padding:10px 16px;gap:12px;grid-template-columns:1fr 1fr}
+body.mobile-mode #overlay .modalBottom{padding:9px 17px 12px}
+body.mobile-mode #overlay .choiceGroup{max-height:145px;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}
+body.mobile-mode #overlay .choice{font-size:10px;padding:6px}
+body.mobile-mode #overlay .keylist{max-height:165px}
+body.mobile-mode #overlay .primary{padding:11px 18px;min-height:44px}
+@media(max-width:650px){body.mobile-mode #overlay .modalBody{grid-template-columns:1fr}body.mobile-mode #overlay .modalTop .status{display:none}body.mobile-mode #overlay .choiceGroup{max-height:115px}body.mobile-mode #overlay .keylist{max-height:120px}}
+@media(max-height:470px){#touchJoystick{height:95px;width:95px;bottom:8px}#touchStick{width:46px;height:46px}#touchRight{bottom:8px;transform:scale(.80);transform-origin:bottom right}#touchLookTip{display:none}#touchSlots{top:44px}#touchShapeBar{top:89px}#touchMenu{top:5px}body.mobile-mode #stats{top:49px}body.mobile-mode #brand{top:8px}body.mobile-mode #overlay .modalTop{padding:7px 15px}body.mobile-mode #overlay .modalBottom{padding:7px 15px}}
+@media(orientation:portrait){body.mobile-mode #touchSlots{top:max(99px,calc(env(safe-area-inset-top) + 90px));right:11px}body.mobile-mode #touchShapeBar{top:max(153px,calc(env(safe-area-inset-top) + 144px));right:11px}}
+@media(max-width:380px){#touchSlots{gap:2px}#touchSlots .touchChip{padding:4px 6px;min-width:36px;font-size:15px}#touchCycle span{max-width:64px}#touchRight{transform:scale(.87);transform-origin:bottom right}}
+
 </style>
 </head>
 <body>
 <canvas id="game" tabindex="0"></canvas><div id="vignette"></div>
-<div id="brand" class="hud"><div class="mark">▣</div><div><div class="title">SANDBOX<strong>//</strong>LAB 6</div><div class="tag">ТВОЯ 3D-ПЕСОЧНИЦА</div></div></div>
+<div id="brand" class="hud"><div class="mark">▣</div><div><div class="title">SANDBOX<strong>//</strong>LAB 7</div><div class="tag">ТВОЯ 3D-ПЕСОЧНИЦА</div></div></div>
 <div id="stats" class="hud"><span class="dot"></span><span>ОБЪЕКТОВ: <b id="count">0</b></span><span>FPS: <b id="fps">60</b></span></div>
 <div id="zone" class="hud">ПАУТИННЫЙ ГОРОД · СВОБОДНАЯ ПЕСОЧНИЦА</div><div id="chargeHUD" class="hud" aria-live="off"><div class="chargeLabel"><span>⚡ СИЛА БРОСКА</span><b id="chargePercent">0%</b></div><div id="chargeTrack"><div id="chargeFill"></div></div><div class="chargeHelp">Отпусти ПКМ, чтобы бросить предмет</div></div><canvas id="beamCanvas"></canvas><div id="crosshair"></div><div id="targetInfo" class="hud"></div><div id="toast"></div>
 <div id="toolbar" class="hud"><div id="slot-build" class="tool active"><span class="symbol">▣</span><span><small>1</small> Создать</span></div><div id="slot-grab" class="tool" role="button" tabindex="0" title="Нажимай 2, чтобы переключать оружие"><span class="symbol" id="slot2Icon">⚡</span><span><small>2</small> <span id="slot2Name">Физпушка</span></span></div><div id="slot-delete" class="tool"><span class="symbol">⌫</span><span><small>3</small> Удалить</span></div><div id="slot-freeze" class="tool"><span class="symbol">❄</span><span><small>4</small> Закрепить</span></div><div class="separator"></div><div id="shapeIndicator" class="shapeIndicator">▣ Ящик</div></div>
 <div id="hint" class="hud"><b>W A S D</b> Ходить &nbsp; <b>МЫШЬ</b> Осмотреться &nbsp; <b>ПРОБЕЛ</b> Прыжок<br><b>2</b> Повторять: ⚡ → 🕸 → ⛽ → ✨ &nbsp; <b>Q</b> Меню</div>
-<div id="overlay"><div class="modal"><div class="modalTop"><div><div class="eyebrow">БЕСПЛАТНО • ПРЯМО В БРАУЗЕРЕ</div><h1 id="heading">Твоя песочница.<br>Твои правила.</h1><p>Открытый город без серых стен, паутина для полётов между небоскрёбами, физпушка, канистра, спички и игровые эффекты огня. Физпушка, паутиномёт, канистра и спички переключаются одной клавишей 2 — нажимай её снова, чтобы выбрать следующий.</p></div><div class="status">● OFFLINE HTML</div></div><div class="modalBody"><div><div class="sectionLabel">34 ВИДА ПРЕДМЕТОВ · [ / ]</div><div class="choiceGroup" id="shapes"></div><div class="sectionLabel">ВЫБОР ИНСТРУМЕНТА</div><div id="toolChoices" class="toolChoices"></div><div class="sectionLabel">ЦВЕТ · T</div><div class="swatches" id="colors"></div><div style="height:16px"></div><div class="sectionLabel">МИР</div><div class="btnRow"><button class="btn" id="save">↓ Сохранить</button><button class="btn" id="load">↺ Загрузить</button><button class="btn" id="clear">✕ Очистить</button></div></div><div><div class="sectionLabel">УПРАВЛЕНИЕ</div><div class="keylist"><kbd>W A S D</kbd><span>Передвижение</span><kbd>Мышь</kbd><span>Осмотр / прицел</span><kbd>ЛКМ (держать)</kbd><span>Поднять и удерживать предмет физпушкой</span><kbd>ПКМ (зажать)</kbd><span>Накапливать силу, удерживая предмет</span><kbd>Отпустить ПКМ</kbd><span>Бросить предмет с накопленной силой</span><kbd>1 / 3 / 4</kbd><span>Создать / удалить / закрепить</span><kbd>2 (повторно)</kbd><span>Физпушка → Паутиномёт → Канистра → Спички → снова физпушка</span><kbd>2: 🕸 + ЛКМ</kbd><span>Пустить паутину к зданию; отпусти — свободный полёт</span><kbd>2: 🕸 + ПКМ</kbd><span>Подтянуть паутину (пока удерживаешь ЛКМ)</span><kbd>2: ⛽ + ПКМ</kbd><span>Открыть или закрыть канистру</span><kbd>2: ⛽ + ЛКМ</kbd><span>Разливать игровую жидкость (при открытой крышке)</span><kbd>2: ✨ + ЛКМ</kbd><span>Зажечь виртуальную спичку и создать искры</span><kbd>E / F</kbd><span>Взять предмет / быстрый бросок</span><kbd>Колёсико</kbd><span>Приблизить / отдалить предмет</span><kbd>[ / ]</kbd><span>Переключить 34 предмета</span><kbd>Shift / Пробел</kbd><span>Бег / прыжок</span><kbd>Q / Esc</kbd><span>Меню / пауза</span></div></div></div><div class="modalBottom"><span class="caption">Нажимай 2 несколько раз, чтобы сменить устройство в руках. Нажми «Начать игру» — окно сразу закроется.</span><button class="btn primary" id="start">▶ НАЧАТЬ ИГРУ</button></div></div></div>
+<div id="mobileUI" aria-label="Сенсорное управление">
+ <button type="button" id="touchMenu" class="touchChip" aria-label="Открыть меню">☰ <span>МЕНЮ</span></button>
+ <div id="touchSlots" aria-label="Выбор инструмента">
+  <button type="button" id="touchBuild" class="touchChip">▣ <span>1</span></button>
+  <button type="button" id="touchCycle" class="touchChip active">⚡ <span id="touchToolLabel">Физпушка</span></button>
+  <button type="button" id="touchDelete" class="touchChip">⌫ <span>3</span></button>
+  <button type="button" id="touchFreeze" class="touchChip">❄ <span>4</span></button>
+ </div>
+ <div id="touchShapeBar"><button type="button" id="touchPrev" aria-label="Предыдущий предмет">◀</button><span id="touchShapeName">📦 Ящик</span><button type="button" id="touchNext" aria-label="Следующий предмет">▶</button></div>
+ <div id="touchJoystick" aria-label="Джойстик передвижения"><div id="touchStick"></div></div>
+ <div id="touchRight">
+  <button type="button" class="touchAction" id="touchJump">↑<small>ПРЫЖОК</small></button>
+  <button type="button" class="touchAction touchSecond" id="touchSecondary">◎<small>ДЕЙСТВИЕ 2</small></button>
+  <button type="button" class="touchAction touchPrimary" id="touchPrimary">✦<small>ДЕЙСТВИЕ 1</small></button>
+ </div>
+ <span id="touchLookTip">Проводи пальцем по экрану, чтобы осматриваться</span>
+</div>
+<div id="overlay"><div class="modal"><div class="modalTop"><div><div class="eyebrow">БЕСПЛАТНО • ПРЯМО В БРАУЗЕРЕ</div><h1 id="heading">Твоя песочница.<br>Твои правила.</h1><p>Открытый город без серых стен, паутина для полётов между небоскрёбами, физпушка, канистра, спички и игровые эффекты огня. Физпушка, паутиномёт, канистра и спички переключаются одной клавишей 2 — нажимай её снова, чтобы выбрать следующий.</p></div><div class="status">● OFFLINE HTML</div></div><div id="mobileMenuTip" style="display:none;padding:8px 16px;color:#c7f6eb;background:#163c43;font-size:11px">📱 Левый джойстик — ходить · пальцем по экрану — смотреть · кнопки справа — действия и прыжок · кнопка ⚡ сверху — менять устройство.</div><div class="modalBody"><div><div class="sectionLabel">34 ВИДА ПРЕДМЕТОВ · [ / ]</div><div class="choiceGroup" id="shapes"></div><div class="sectionLabel">ВЫБОР ИНСТРУМЕНТА</div><div id="toolChoices" class="toolChoices"></div><div class="sectionLabel">РЕЖИМ УПРАВЛЕНИЯ · АВТОВЫБОР</div><div class="deviceChoices" id="deviceChoices"><button type="button" class="deviceChoice" data-device="desktop">🖥️ Компьютер</button><button type="button" class="deviceChoice" data-device="mobile">📱 Телефон / планшет</button></div><div class="deviceNote" id="deviceNote">Подбираем управление для вашего устройства…</div><div class="sectionLabel">ЦВЕТ · T</div><div class="swatches" id="colors"></div><div style="height:16px"></div><div class="sectionLabel">МИР</div><div class="btnRow"><button class="btn" id="save">↓ Сохранить</button><button class="btn" id="load">↺ Загрузить</button><button class="btn" id="clear">✕ Очистить</button></div></div><div><div class="sectionLabel">УПРАВЛЕНИЕ</div><div class="keylist"><kbd>W A S D</kbd><span>Передвижение</span><kbd>Мышь</kbd><span>Осмотр / прицел</span><kbd>ЛКМ (держать)</kbd><span>Поднять и удерживать предмет физпушкой</span><kbd>ПКМ (зажать)</kbd><span>Накапливать силу, удерживая предмет</span><kbd>Отпустить ПКМ</kbd><span>Бросить предмет с накопленной силой</span><kbd>1 / 3 / 4</kbd><span>Создать / удалить / закрепить</span><kbd>2 (повторно)</kbd><span>Физпушка → Паутиномёт → Канистра → Спички → снова физпушка</span><kbd>2: 🕸 + ЛКМ</kbd><span>Пустить паутину к зданию; отпусти — свободный полёт</span><kbd>2: 🕸 + ПКМ</kbd><span>Подтянуть паутину (пока удерживаешь ЛКМ)</span><kbd>2: ⛽ + ПКМ</kbd><span>Открыть или закрыть канистру</span><kbd>2: ⛽ + ЛКМ</kbd><span>Разливать игровую жидкость (при открытой крышке)</span><kbd>2: ✨ + ЛКМ</kbd><span>Зажечь виртуальную спичку и создать искры</span><kbd>E / F</kbd><span>Взять предмет / быстрый бросок</span><kbd>Колёсико</kbd><span>Приблизить / отдалить предмет</span><kbd>[ / ]</kbd><span>Переключить 34 предмета</span><kbd>Shift / Пробел</kbd><span>Бег / прыжок</span><kbd>Q / Esc</kbd><span>Меню / пауза</span></div></div></div><div class="modalBottom"><span class="caption">Один файл для телефона и ПК: управление определяется автоматически. Можно изменить выбор выше.</span><button class="btn primary" id="start">▶ НАЧАТЬ ИГРУ</button></div></div></div>
 <svg id="gun" viewBox="0 0 500 355" xmlns="http://www.w3.org/2000/svg" aria-label="Физическая пушка" role="img">
 <defs><linearGradient id="gunMetal" x1="0" x2="1" y1="0" y2=".8"><stop stop-color="#9baeb6"/><stop offset=".38" stop-color="#354953"/><stop offset=".73" stop-color="#182b35"/><stop offset="1" stop-color="#6b8792"/></linearGradient><linearGradient id="energy"><stop stop-color="#00c4e9"/><stop offset=".5" stop-color="#cbffff"/><stop offset="1" stop-color="#17a9df"/></linearGradient><filter id="energyGlow"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
 <path d="M220 190 L315 130 L425 174 L505 230 L505 359 L344 355 L284 275 Z" fill="#18232c" stroke="#71858f" stroke-width="9"/>
@@ -449,7 +522,10 @@ function initialProps(){
  ]) newProp(shape,x,y,z,col);
 }
 
-const player={p:vec3(2,0,52),vx:0,vz:0,vy:0,grounded:true,support:null},keys={};let yaw=0,pitch=-.10,playing=false,menuMode=false,firstStart=true,lastTime=performance.now(),view,proj,hovered=null,toastTimer=0,frameN=0,fpsAccumulator=0,simTime=0;
+const player={p:vec3(2,0,52),vx:0,vz:0,vy:0,grounded:true,support:null},keys={};
+const autoMobile=window.matchMedia('(pointer: coarse)').matches||/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+let mobileMode=autoMobile, mobileMove={x:0,y:0},mobileJumpQueued=false;
+let yaw=0,pitch=-.10,playing=false,menuMode=false,firstStart=true,lastTime=performance.now(),view,proj,hovered=null,toastTimer=0,frameN=0,fpsAccumulator=0,simTime=0;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));const dot=(a,b)=>a.x*b.x+a.y*b.y+a.z*b.z;
 function normalize(a){const d=Math.hypot(a.x,a.y,a.z)||1;return vec3(a.x/d,a.y/d,a.z/d);}
 function forward(){const cp=Math.cos(pitch);return vec3(Math.sin(yaw)*cp,Math.sin(pitch),-Math.cos(yaw)*cp);}
@@ -510,35 +586,37 @@ function create(){const hit=raycast(28),d=forward(),size=propSize(selectedShape)
 function erase(){const hit=raycast(28);if(hit&&hit.object){const obj=hit.object;const idx=props.indexOf(obj);if(idx>=0)props.splice(idx,1);if(held===obj){held=null;mouseHeld=false;cancelCharge();}updateCount();toast('Предмет удалён');}else toast('Наведись на предмет');}
 function freeze(){const hit=(held&&tool==='grab')?{object:held}:raycast(28);if(hit&&hit.object){hit.object.frozen=!hit.object.frozen;hit.object.v=vec3(0,0,0);if(hit.object===held){held=null;mouseHeld=false;cancelCharge();}toast(hit.object.frozen?'Предмет закреплён':'Предмет откреплён');}else toast('Наведись на предмет');}
 function useTool(){if(tool==='build')create();if(tool==='grab')grab();if(tool==='delete')erase();if(tool==='freeze')freeze();}
-canvas.addEventListener('mousedown',e=>{
+function actionDown(button){
  if(!playing)return;
- if(e.button===0){
+ if(button===0){
   if(tool==='grab'){mouseHeld=true;if(!held)grab();}
   else if(tool==='web')tryAttachWeb();
-  else if(tool==='can'){if(canOpen&&fuel>0)pouring=true;else toast(canOpen?'Канистра пуста':'ПКМ — открыть канистру');}
+  else if(tool==='can'){if(canOpen&&fuel>0)pouring=true;else toast(canOpen?'Канистра пуста':'ДЕЙСТВИЕ 2 — открыть канистру');}
   else if(tool==='matches'&&ignitionCooldown<=0){igniteVirtualPuddles();ignitionCooldown=.6;}
   else useTool();
  }
- if(e.button===2){
-  if(tool==='grab'){if(held)startCharge();else toast('Сначала схвати предмет левой кнопкой мыши');}
+ if(button===2){
+  if(tool==='grab'){if(held)startCharge();else toast('Сначала схвати предмет кнопкой действия 1');}
   else if(tool==='can'){canOpen=!canOpen;if(!canOpen)pouring=false;toast(canOpen?'Канистра открыта':'Канистра закрыта');}
-  else if(tool==='web'){keys.webReel=true;}
+  else if(tool==='web')keys.webReel=true;
   else if(tool==='build')create();
  }
-});
-window.addEventListener('mouseup',e=>{
- if(e.button===2){
+}
+function actionUp(button){
+ if(button===2){
   if(charging){if(held&&tool==='grab')releaseHeld(true,chargeRatio());else cancelCharge();mouseHeld=false;}
   keys.webReel=false;
  }
- if(e.button===0){
+ if(button===0){
   if(mouseHeld&&tool==='grab'&&held)releaseHeld(false);
   mouseHeld=false;if(tool==='web')detachWeb();if(tool==='can')pouring=false;
  }
-});
+}
+canvas.addEventListener('mousedown',e=>{if(!mobileMode)actionDown(e.button);});
+window.addEventListener('mouseup',e=>{if(!mobileMode)actionUp(e.button);});
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 
-document.addEventListener('mousemove',e=>{if(!playing)return;yaw+=e.movementX*.0025;pitch=clamp(pitch-e.movementY*.0025,-1.48,1.48);});
+document.addEventListener('mousemove',e=>{if(!playing||mobileMode)return;yaw+=e.movementX*.0025;pitch=clamp(pitch-e.movementY*.0025,-1.48,1.48);});
 document.addEventListener('wheel',e=>{if(playing&&held){holdDist=clamp(holdDist+Math.sign(e.deltaY)*.35,1.75,12);e.preventDefault();}},{passive:false});
 document.addEventListener('keydown',e=>{const k=e.key.toLowerCase();if([' ','arrowup','arrowdown','arrowleft','arrowright'].includes(k))e.preventDefault();if(e.repeat&&['q','escape','2','e','f','r','g','t','delete','[',']'].includes(k))return;keys[k]=true;if(k==='q'||k==='escape'){toggleMenu();return;}if(!playing)return;if(k==='1')setTool('build');if(k==='2')cycleTool2();if(k==='3')setTool('delete');if(k==='4')setTool('freeze');if(k==='z')setShape('crate');if(k==='x')setShape('ball');if(k==='c')setShape('barrel');if(k==='v')setShape('cone');if(k==='[')setShape(shapeKeys[(shapeKeys.indexOf(selectedShape)+shapeKeys.length-1)%shapeKeys.length]);if(k===']')setShape(shapeKeys[(shapeKeys.indexOf(selectedShape)+1)%shapeKeys.length]);if(k==='t')chooseColor((selectedColor+1)%colors.length);if(k==='e'&&tool==='grab')grab();if(k==='f'&&tool==='grab'){releaseHeld(true,charging?chargeRatio():.32);mouseHeld=false;}if(k==='g')freeze();if(k==='delete'||k==='backspace')erase();if(k==='r'){if(tool==='can'){fuel=100;toast('Игровая канистра пополнена');}else if(held){held.rot+=Math.PI/4;toast('Предмет повёрнут');}else toast('Подними предмет клавишей E, чтобы повернуть');}});
 document.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);window.addEventListener('blur',()=>{for(const k in keys)keys[k]=false;cancelCharge();detachWeb();pouring=false;mouseHeld=false;if(held)releaseHeld();});
@@ -549,7 +627,7 @@ function begin(){
  menuMode=false;firstStart=false;playing=true;
  document.body.classList.add('playing');setOverlay(false);updateToolHUD();
  try{
-  if(canvas.requestPointerLock){const promise=canvas.requestPointerLock();
+  if(!mobileMode&&canvas.requestPointerLock){const promise=canvas.requestPointerLock();
    if(promise&&typeof promise.catch==='function')promise.catch(()=>toast('Режим захвата мыши недоступен; игра запущена'));
   }
  }catch(_){toast('Режим захвата мыши недоступен; игра запущена');}
@@ -568,10 +646,91 @@ function pauseGame(){
 function toggleMenu(){if(playing)pauseGame();else if(menuMode)begin();}
 document.addEventListener('pointerlockchange',()=>{
  const locked=document.pointerLockElement===canvas;
- if(locked){hadPointerLock=true;if(!playing){playing=true;menuMode=false;document.body.classList.add('playing');setOverlay(false);}updateToolHUD();}
+ if(locked&&!mobileMode){hadPointerLock=true;if(!playing){playing=true;menuMode=false;document.body.classList.add('playing');setOverlay(false);}updateToolHUD();}
  else if(hadPointerLock&&playing){pauseGame();}
 });
 document.addEventListener('pointerlockerror',()=>{if(playing)toast('Захват мыши запрещён браузером — можно играть без него');});
+
+// Управление телефоном — клавиатура не требуется.  Двойной/одновременный мультитач поддерживается Pointer Events.
+function updateTouchButtons(){
+ const slot=slot2Tools.includes(tool)?tool:'grab';
+ $('touchCycle').firstChild.textContent=slot2Icons[slot]+' ';
+ $('touchToolLabel').textContent=toolNames[slot];
+ for(const [id,t] of [['touchBuild','build'],['touchDelete','delete'],['touchFreeze','freeze']])$(id).classList.toggle('active',tool===t);
+ $('touchCycle').classList.toggle('active',slot2Tools.includes(tool));
+ $('touchShapeName').textContent=shapeSigns[selectedShape]+' '+shapeNames[selectedShape];
+ const primary=tool==='grab'?'ВЗЯТЬ':tool==='web'?'ПАУТИНА':tool==='can'?'ЛИТЬ':tool==='matches'?'СПИЧКА':tool==='build'?'СОЗДАТЬ':tool==='delete'?'УДАЛИТЬ':'ЗАКРЕП.';
+ const secondary=tool==='grab'?'ЗАРЯД':tool==='web'?'ПОДТЯНУТЬ':tool==='can'?'КРЫШКА':tool==='build'?'ЕЩЁ':'—';
+ $('touchPrimary').querySelector('small').textContent=primary;
+ $('touchSecondary').querySelector('small').textContent=secondary;
+ $('touchSecondary').style.opacity=['grab','web','can','build'].includes(tool)?'1':'.45';
+}
+function applyDeviceMode(isMobile){
+ mobileMode=!!isMobile;
+ document.body.classList.toggle('mobile-mode',mobileMode);
+ document.body.classList.toggle('desktop-mode',!mobileMode);
+ for(const button of document.querySelectorAll('[data-device]'))button.classList.toggle('selected',(button.dataset.device==='mobile')===mobileMode);
+ $('deviceNote').textContent='Автоматически определено: '+(autoMobile?'сенсорное устройство':'компьютер')+'. Сейчас выбран режим: '+(mobileMode?'📱 Телефон / планшет':'🖥️ Компьютер')+'.';
+ mobileMove.x=0;mobileMove.y=0;mobileJumpQueued=false;
+ $('touchStick').style.transform='translate(-50%,-50%)';
+ updateTouchButtons();
+ if(mobileMode&&document.pointerLockElement===canvas){hadPointerLock=false;document.exitPointerLock?.();}
+ resize();
+}
+for(const button of document.querySelectorAll('[data-device]'))button.addEventListener('click',()=>applyDeviceMode(button.dataset.device==='mobile'));
+$('touchMenu').addEventListener('click',()=>{if(playing)pauseGame();});
+for(const [id,callback] of [
+ ['touchBuild',()=>setTool('build')],['touchCycle',cycleTool2],['touchDelete',()=>setTool('delete')],['touchFreeze',()=>setTool('freeze')],
+ ['touchPrev',()=>setShape(shapeKeys[(shapeKeys.indexOf(selectedShape)+shapeKeys.length-1)%shapeKeys.length])],
+ ['touchNext',()=>setShape(shapeKeys[(shapeKeys.indexOf(selectedShape)+1)%shapeKeys.length])]
+])$(id).addEventListener('click',()=>{if(playing)callback();});
+function bindTouchHold(el,down,up){
+ let current=null;
+ el.addEventListener('pointerdown',e=>{
+  if(!playing||!mobileMode||current!==null)return;
+  e.preventDefault();current=e.pointerId;
+  try{el.setPointerCapture?.(e.pointerId);}catch(_){}
+  el.classList.add('pressed');down();
+ });
+ const release=e=>{if(current!==e.pointerId)return;e.preventDefault();current=null;el.classList.remove('pressed');up();};
+ el.addEventListener('pointerup',release);
+ el.addEventListener('pointercancel',release);
+ return ()=>{if(current!==null){current=null;el.classList.remove('pressed');up();}};
+}
+const releaseTouchPrimary=bindTouchHold($('touchPrimary'),()=>actionDown(0),()=>actionUp(0));
+const releaseTouchSecondary=bindTouchHold($('touchSecondary'),()=>actionDown(2),()=>actionUp(2));
+bindTouchHold($('touchJump'),()=>{mobileJumpQueued=true;},()=>{});
+const touchJoystick=$('touchJoystick'),touchStick=$('touchStick');
+let joystickPointer=null;
+function updateJoystick(e){
+ const rect=touchJoystick.getBoundingClientRect(),cx=rect.left+rect.width*.5,cy=rect.top+rect.height*.5;
+ const maxDist=rect.width*.5-19,dx=e.clientX-cx,dy=e.clientY-cy,dist=Math.hypot(dx,dy)||1,scale=Math.min(1,maxDist/dist);
+ const nx=dx*scale/maxDist,ny=dy*scale/maxDist;
+ mobileMove.x=nx;mobileMove.y=ny;
+ touchStick.style.transform='translate(calc(-50% + '+(nx*maxDist)+'px),calc(-50% + '+(ny*maxDist)+'px))';
+}
+function resetJoystick(){joystickPointer=null;mobileMove.x=0;mobileMove.y=0;touchStick.style.transform='translate(-50%,-50%)';}
+touchJoystick.addEventListener('pointerdown',e=>{if(!playing||!mobileMode||joystickPointer!==null)return;e.preventDefault();joystickPointer=e.pointerId;try{touchJoystick.setPointerCapture?.(e.pointerId);}catch(_){}updateJoystick(e);});
+touchJoystick.addEventListener('pointermove',e=>{if(joystickPointer!==e.pointerId)return;e.preventDefault();updateJoystick(e);});
+for(const eventName of ['pointerup','pointercancel'])touchJoystick.addEventListener(eventName,e=>{if(joystickPointer===e.pointerId){e.preventDefault();resetJoystick();}});
+let lookPointer=null,lookX=0,lookY=0;
+canvas.addEventListener('pointerdown',e=>{if(!playing||!mobileMode||lookPointer!==null)return;e.preventDefault();lookPointer=e.pointerId;lookX=e.clientX;lookY=e.clientY;try{canvas.setPointerCapture?.(e.pointerId);}catch(_){}});
+canvas.addEventListener('pointermove',e=>{
+ if(!mobileMode||!playing||lookPointer!==e.pointerId)return;
+ e.preventDefault();const dx=e.clientX-lookX,dy=e.clientY-lookY;
+ yaw+=dx*.0055;pitch=clamp(pitch-dy*.0055,-1.48,1.48);
+ lookX=e.clientX;lookY=e.clientY;
+});
+for(const eventName of ['pointerup','pointercancel'])canvas.addEventListener(eventName,e=>{if(lookPointer===e.pointerId)lookPointer=null;});
+// Mobile pause must also stop held buttons and joystick.
+const originalPauseGame=pauseGame;
+pauseGame=function(){releaseTouchPrimary();releaseTouchSecondary();resetJoystick();lookPointer=null;originalPauseGame();};
+const previousSetTool=setTool;
+setTool=function(t){previousSetTool(t);updateTouchButtons();};
+const previousSetShape=setShape;
+setShape=function(shape){previousSetShape(shape);updateTouchButtons();};
+applyDeviceMode(autoMobile);
+
 function storage(action){try{if(action==='save'){localStorage.setItem('sandboxLabSave',JSON.stringify(props.map(o=>({shape:o.shape,p:o.p,v:o.v,colorIndex:o.colorIndex,frozen:o.frozen,rot:o.rot}))));toast('Мир сохранён в браузере');}else{let data=JSON.parse(localStorage.getItem('sandboxLabSave')||'null');if(!Array.isArray(data)){toast('Нет сохранённого мира');return;}props.length=0;held=null;cancelCharge();for(const d of data.slice(0,260)){if(!shapeKeys.includes(d.shape)||!d.p)continue;let p=newProp(d.shape,clamp(Number(d.p.x)||0,-WORLD_HALF+3,WORLD_HALF-3),clamp(Number(d.p.y)||2,1,40),clamp(Number(d.p.z)||0,-WORLD_HALF+3,WORLD_HALF-3),clamp(d.colorIndex|0,0,colors.length-1),{frozen:!!d.frozen});if(p){p.rot=Number(d.rot)||0;if(d.v)p.v=vec3(Number(d.v.x)||0,Number(d.v.y)||0,Number(d.v.z)||0);}}toast('Мир загружен');}}catch(err){toast('Сохранение недоступно в этом браузере');}}
 $('save').addEventListener('click',()=>storage('save'));$('load').addEventListener('click',()=>storage('load'));$('clear').addEventListener('click',()=>{props.length=0;puddles.length=0;held=null;detachWeb();cancelCharge();updateCount();toast('Мир очищен');});
 function overlap(a,b){return Math.abs(a.p.x-b.p.x)<(a.size.x+b.size.x)/2&&Math.abs(a.p.y-b.p.y)<(a.size.y+b.size.y)/2&&Math.abs(a.p.z-b.p.z)<(a.size.z+b.size.z)/2;}
@@ -617,7 +776,8 @@ function playerUpdate(dt){
  if(keys.s||keys['ы']){dx-=Math.sin(yaw);dz+=Math.cos(yaw);}
  if(keys.a||keys['ф']){dx-=Math.cos(yaw);dz-=Math.sin(yaw);}
  if(keys.d||keys['в']){dx+=Math.cos(yaw);dz+=Math.sin(yaw);}
- const len=Math.hypot(dx,dz);if(len){dx/=len;dz/=len;}
+ if(mobileMode){dx+=Math.sin(yaw)*(-mobileMove.y)+Math.cos(yaw)*mobileMove.x;dz-=Math.cos(yaw)*(-mobileMove.y)-Math.sin(yaw)*mobileMove.x;}
+ const len=Math.hypot(dx,dz);if(len>1){dx/=len;dz/=len;}
  const speed=keys.shift?10:6.2,oldX=player.p.x,oldZ=player.p.z,oldY=player.p.y;
  const airborne=!player.grounded||!!web.anchor;
  if(!airborne){
@@ -628,7 +788,7 @@ function playerUpdate(dt){
  }
  const hSpeed=Math.hypot(player.vx,player.vz);
  if(hSpeed>37){player.vx*=37/hSpeed;player.vz*=37/hSpeed;}
- if((keys[' ']||keys.space)&&player.grounded){player.vy=8.7;player.grounded=false;player.support=null;}
+ if((keys[' ']||keys.space||mobileJumpQueued)&&player.grounded){player.vy=8.7;player.grounded=false;player.support=null;}mobileJumpQueued=false;
  player.vy-=18.5*dt;
  player.p.x+=player.vx*dt;player.p.z+=player.vz*dt;player.p.y+=player.vy*dt;
  // Система паутины: верёвка не тянется, импульс сохраняется по касательной.
@@ -672,7 +832,7 @@ function playerUpdate(dt){
  }
 }
 
-function resize(){const dpr=Math.min(window.devicePixelRatio||1,1.75),w=Math.floor(innerWidth*dpr),h=Math.floor(innerHeight*dpr);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h);}proj=perspective(Math.PI/2.85,w/h,.08,480);}
+function resize(){const dpr=Math.min(window.devicePixelRatio||1,mobileMode?1.1:1.75),w=Math.floor(innerWidth*dpr),h=Math.floor(innerHeight*dpr);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h);}proj=perspective(Math.PI/2.85,w/h,.08,480);}
 function renderProp(o){
  const def=shapes[o.shape]||shapes.crate;
  if(def.parts){for(const a of def.parts){
@@ -689,7 +849,8 @@ function render(){
  const eye=camera(),d=forward(),target=vec3(eye.x+d.x,eye.y+d.y,eye.z+d.z);view=lookAt(eye,target);
  gl.uniformMatrix4fv(U.uProj,false,proj);gl.uniformMatrix4fv(U.uView,false,view);
  for(const s of statics){
-  if(Math.abs(s.p.x-player.p.x)>145+s.size.x/2||Math.abs(s.p.z-player.p.z)>145+s.size.z/2)continue;
+  const viewDistance=mobileMode?90:145;
+  if(Math.abs(s.p.x-player.p.x)>viewDistance+s.size.x/2||Math.abs(s.p.z-player.p.z)>viewDistance+s.size.z/2)continue;
   draw(meshes[s.mesh],s.p,s.size,s.color,{grid:s.grid,glow:s.glow,rot:s.rot,material:s.material});
  }
  gl.depthMask(false);
@@ -719,7 +880,7 @@ function projectedPoint(p){
 }
 
 function renderBeam(t){
- const ww=innerWidth,hh=innerHeight,dpr=Math.min(devicePixelRatio||1,1.75);
+ const ww=innerWidth,hh=innerHeight,dpr=Math.min(devicePixelRatio||1,mobileMode?1.1:1.75);
  if(beam.width!==Math.floor(ww*dpr)||beam.height!==Math.floor(hh*dpr)){beam.width=Math.floor(ww*dpr);beam.height=Math.floor(hh*dpr);}
  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,ww,hh);
  if(!playing)return;
